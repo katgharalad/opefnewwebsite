@@ -4,12 +4,43 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --olive-fill: #97B34D;
+  --olive-dark: #6E8D25;
+  --ink-base: #0D1B12;
+  --ink-base-body: #1C2A1A;
+  --ink-invert: #FFFFFF;
+  --ink-invert-body: rgba(255, 255, 255, 0.85);
+}
+
 @layer base {
   html {
     font-family: 'IBM Plex Mono', monospace;
   }
 
   body {
-    @apply antialiased;
+    @apply antialiased bg-black;
   }
+}
+
+/* Reduced motion support for diagram animations */
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe\:opacity-100 { opacity: 0 !important; }
+  svg animate, svg animateMotion { display: none !important; }
+}
+
+/* Soft pulse animation for nodes */
+@keyframes soft-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(151,179,77,0)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(151,179,77,0.25)); }
+}
+.node-pulse { animation: soft-pulse 2.8s ease-in-out infinite; }
+
+/* Marquee animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
 }
