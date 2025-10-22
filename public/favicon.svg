@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" fill="#0D1B12" rx="4"/>
+  
+  <!-- OPEF Logo -->
+  <rect x="4" y="8" width="24" height="8" fill="#97B34D" rx="1"/>
+  <text x="16" y="14" text-anchor="middle" fill="#000000" font-family="monospace" font-size="6" font-weight="bold">OPEF</text>
+  
+  <!-- Globe dots -->
+  <circle cx="16" cy="22" r="1.5" fill="#97B34D"/>
+  <circle cx="12" cy="24" r="1" fill="#97B34D"/>
+  <circle cx="20" cy="24" r="1" fill="#97B34D"/>
+</svg>
