@@ -1,30 +1,97 @@
-import { ArrowRight, Box, Circle, Square, CheckCircle2, CircuitBoard, FileText, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Box, CheckCircle2, CircuitBoard, FileText, ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import OpefNavbar from './OpefNavbar';
+import WhyItMatters from './WhyItMatters';
+import RotatingEarth from '@/components/ui/wireframe-dotted-globe';
 
 function App() {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
   const [displayText, setDisplayText] = useState('');
   const [showCursor, setShowCursor] = useState(true);
   const [fillProgress, setFillProgress] = useState(0);
   const [section2Ref, setSection2Ref] = useState<HTMLElement | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [activePersona, setActivePersona] = useState<'agencies'|'consulting'|'sustainability'|'researchers'>('agencies');
-  const [metricsVisible, setMetricsVisible] = useState(false);
-  const [proofItemsVisible, setProofItemsVisible] = useState([false, false, false]);
   const proofSectionRef = useRef(null);
   const [visionCountersVisible, setVisionCountersVisible] = useState(false);
   const [visionTextVisible, setVisionTextVisible] = useState(false);
   const [visionTypewriterText, setVisionTypewriterText] = useState('');
   const visionSectionRef = useRef(null);
   const [betaVisible, setBetaVisible] = useState(false);
-  const [betaFormSubmitted, setBetaFormSubmitted] = useState(false);
   const betaSectionRef = useRef(null);
 
   const fullText = "Bury Bureaucracy. Work Easier.";
+
+  // Team data
+  const team = {
+    headline: "Why Us?",
+    subhead: "Applied, explainable AI for environmental systems — built by product operatives, researchers, and domain experts.",
+    founders: [
+      {
+        name: "Inesh Tickoo",
+        title: "Founder, CEO (Product & GTM)",
+        headshot: "/images/inesh.jpeg",
+        placeholder: "https://picsum.photos/320/320?random=1",
+        tags: ["Product", "GTM", "Design", "Research"]
+      },
+      {
+        name: "Aarav Singh",
+        title: "Founder, CTO & Chief of Staff",
+        headshot: "/images/aarav.jpg",
+        placeholder: "https://picsum.photos/320/320?random=2",
+        tags: ["AI", "Data", "ESG", "Automation"]
+      }
+    ],
+    advisors: [
+      { 
+        name: "Matt Bixler", 
+        title: "Advisory — Product Management, GTM, Sales", 
+        headshot: "/images/mattbixler.jpg",
+        tags: ["Product", "Sales", "GTM"] 
+      },
+      { 
+        name: "JP Diogo", 
+        title: "Advisory — Technology OM, GTM, Growth, Investments", 
+        headshot: "/images/jpdiogo.jpeg",
+        tags: ["Ops", "Growth", "Investments"] 
+      },
+      { 
+        name: "Tim Hayes", 
+        title: "Advisory — AI Technology & Software Engineering", 
+        headshot: "/images/tim.jpeg",
+        tags: ["AI", "ML", "Engineering"] 
+      },
+      { 
+        name: "Conner Brown", 
+        title: "Advisory — GTM Strategy and Technical Operations", 
+        headshot: "/images/connorbrown.jpg",
+        tags: ["GTM", "Ops"] 
+      },
+      { 
+        name: "Memme Onwudiwe", 
+        title: "Advisory — Legal & Strategic Partnerships", 
+        headshot: "/images/memme.webp",
+        tags: ["Legal", "Partnerships"] 
+      },
+    ],
+    proofLine: "100+ years combined across technology, strategy, law, and GTM.",
+  };
+
+  // Custom hook for reveal animations
+  const useReveal = (threshold = 0.2) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) return;
+      const io = new IntersectionObserver(([e]) => e.isIntersecting && setVisible(true), { threshold });
+      io.observe(el);
+      return () => io.disconnect();
+    }, [threshold]);
+    return { ref, visible };
+  };
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -40,17 +107,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index < fullText.length) {
-        setDisplayText(fullText.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(timer);
-      }
-    }, 100);
-
-    return () => clearInterval(timer);
+    let i = 0;
+    const id = setInterval(() => {
+      setDisplayText(fullText.slice(0, i + 1));
+      i++;
+      if (i >= fullText.length) clearInterval(id);
+    }, 50); // Faster typing speed
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -187,30 +250,6 @@ function App() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Proof section scroll animations
-  useEffect(() => {
-    const proofSection = proofSectionRef.current;
-    if (!proofSection) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setMetricsVisible(true);
-            
-            // Stagger proof items visibility
-            setTimeout(() => setProofItemsVisible([true, false, false]), 200);
-            setTimeout(() => setProofItemsVisible([true, true, false]), 400);
-            setTimeout(() => setProofItemsVisible([true, true, true]), 600);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(proofSection);
-    return () => observer.disconnect();
-  }, []);
 
   // Vision section animations
   useEffect(() => {
@@ -292,8 +331,8 @@ function App() {
         'Cross-regulation triggers in one view',
         'Immutable audit trail for every change'
       ],
-      stat: { value: '30–60%', label: 'drafting time saved' },
-      receipt: { before: '6–12 months', after: 'weeks' }
+      stat: { value: '85–95%', label: 'drafting time saved' },
+      receipt: { before: '6–12 months', after: '2–4 weeks' }
     },
     {
       id: 'consulting' as const,
@@ -341,8 +380,7 @@ function App() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
+      // Form submitted
     }
   };
 
@@ -359,31 +397,114 @@ function App() {
       <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-12">
 
-          <section className="mb-48">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 border border-white/20 text-xs font-mono">
-              <Circle className="w-3 h-3 fill-white" strokeWidth={0} />
-              <span>OPEF – MACHINE-LITERATE GOVERNANCE</span>
-            </div>
-            <h1 className="text-6xl md:text-8xl font-black leading-[0.85] mb-12 tracking-tighter max-w-5xl">
-              {displayText}
-              <span className={`inline-block w-1 h-16 bg-white ml-2 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`} />
-            </h1>
-          </div>
+          <section className="relative overflow-hidden bg-black text-white mb-48">
+            {/* soft olive wash + faint grid */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(120% 80% at 0% 0%, rgba(151,179,77,0.12), transparent 55%)"
+              }}
+            />
+            <svg
+              aria-hidden
+              className="absolute inset-0 opacity-[0.06]"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <pattern id="g" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M10 0H0V10" stroke="#97B34D" strokeWidth="0.15" fill="none" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#g)" />
+            </svg>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 max-w-4xl">
-            <div className="space-y-4 border-l border-white/20 pl-6">
-              <p className="text-base leading-relaxed font-light text-white/80">
-                OPEF transforms environmental compliance from a consulting bottleneck into an AI-driven system.
-              </p>
-            </div>
-            <div className="space-y-4 border-l border-white/40 pl-6">
-              <p className="text-base leading-relaxed font-light text-white/80">
-                Built for agencies and contractors modernizing under the OMB M-25-21 federal AI mandate.
-                <br />
-                → From rulebooks to audit-ready drafts — in hours, not years.
-              </p>
-            </div>
+            <div className="relative z-10 max-w-8xl mx-auto px-8 py-12">
+              {/* Two-column layout: Text on left, Globe on right */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                
+                {/* Left Column - Text Content */}
+                <div className="space-y-8 lg:pr-8">
+                  {/* Pill */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0, duration: 0.2, ease: "easeOut" }}
+                    className="inline-flex items-center gap-2 mb-8 px-3 py-1 border border-white/15 bg-white/5 text-[11px] md:text-xs font-mono tracking-widest uppercase"
+                  >
+                    <span className="inline-block w-2 h-2 rounded-full bg-[#97B34D]" />
+                    OPEF — Machine-Literate Governance
+                  </motion.div>
+
+                  {/* Headline */}
+                  <h1 className="text-5xl md:text-7xl font-black leading-[0.85] tracking-tighter">
+                    <span className="inline-block" style={{ minWidth: '100%' }}>
+                      <span className="inline-block min-h-[1.2em]">
+                        {displayText}
+                        <span
+                          className={`inline-block w-1 h-16 bg-white ml-2 transition-opacity ${
+                            showCursor ? "opacity-100" : "opacity-0"
+                          }`}
+                        />
+                      </span>
+                    </span>
+                  </h1>
+
+                  {/* Description */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.03, duration: 0.2, ease: "easeOut" }}
+                    className="space-y-6"
+                  >
+                    <div className="relative">
+                      <div className="absolute -left-4 top-1 bottom-1 w-px bg-white/15" />
+                      <div className="absolute -left-4 top-1 w-1.5 h-1.5 rounded-[2px] bg-[#97B34D]" />
+                      <p className="text-base leading-relaxed font-light text-white/80">
+                        OPEF transforms environmental compliance from a consulting bottleneck into an AI-driven system.
+                      </p>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute -left-4 top-1 bottom-1 w-px bg-white/15" />
+                      <div className="absolute -left-4 top-1 w-1.5 h-1.5 rounded-[2px] bg-[#97B34D]" />
+                      <p className="text-base leading-relaxed font-light text-white/80">
+                        Built for agencies and contractors modernizing under the OMB M-25-21 federal AI mandate.
+                        <br />
+                        <span className="inline-block mt-2">
+                          ↳ From rulebooks to audit-ready drafts — <em>in hours, not years.</em>
+                        </span>
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  {/* subtle bottom olive rail to suggest continuation */}
+                  <motion.div
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ delay: 0.05, duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+                    className="h-[2px] w-40 md:w-56 bg-gradient-to-r from-[#97B34D] to-transparent origin-left"
+                  />
+                </div>
+
+                {/* Right Column - Globe */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
+                  className="flex justify-center lg:justify-end lg:pl-8 lg:pr-12"
+                >
+                  <div className="w-full max-w-xl lg:max-w-2xl">
+                    <RotatingEarth 
+                      width={494} 
+                      height={494} 
+                      className="opacity-90 hover:opacity-100 transition-opacity duration-300" 
+                    />
+                  </div>
+                </motion.div>
+              </div>
           </div>
         </section>
         </div>
@@ -490,16 +611,16 @@ function App() {
                     >
                       OPEF converts NEPA, CWA, ESA, and NHPA procedures into structured "rulepacks"—
                       machine-readable frameworks that enable explainable reasoning and defensible automation.
-                    </p>
-                  </div>
-                </div>
+              </p>
+            </div>
+            </div>
 
                 <div className="md:col-span-5">
                   {/* Rulepack Anatomy */}
                   <div className="mt-6 md:mt-0 md:ml-auto max-w-md rounded-xl border border-[#2d3a2e]/15 bg-white/75 backdrop-blur-sm">
                     <div className="px-5 py-3 text-[10px] font-mono tracking-widest uppercase text-[#2d3a2e]/60 border-b border-[#2d3a2e]/10">
                       Rulepack · Anatomy
-                    </div>
+              </div>
                     <div className="p-5 font-mono text-[12px] leading-relaxed text-[#2d3a2e]">
                       <div className="grid grid-cols-3 gap-y-3">
                         <div className="col-span-1 text-[#2d3a2e]/60">id</div>
@@ -519,7 +640,7 @@ function App() {
 
                         <div className="col-span-1 text-[#2d3a2e]/60">citations[]</div>
                         <div className="col-span-2">passage-level, versioned, hash-sealed</div>
-                      </div>
+              </div>
 
                       <div className="mt-4 pt-4 border-t border-[#2d3a2e]/10 flex items-center justify-between">
                         <span className="text-[10px] uppercase tracking-widest text-[#2d3a2e]/60">Validation</span>
@@ -527,9 +648,9 @@ function App() {
                           <span className="inline-block w-2 h-2 rounded-full bg-[#97B34D] shadow-[0_0_10px_rgba(151,179,77,0.5)]" />
                           Ready for Drafting
                         </span>
-                      </div>
-                    </div>
-                  </div>
+              </div>
+            </div>
+          </div>
                 </div>
               </div>
 
@@ -632,19 +753,19 @@ function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
               {/* Hero Card - Full Width */}
               <div className="lg:col-span-2">
-                <div className="bg-[#0d0d0d] border border-white/10 p-12 hover:border-[#97B34D]/60 hover:shadow-[0_0_20px_rgba(151,179,77,0.15)] hover:-translate-y-1 transition-all duration-500">
+                <div className="bg-[#0d0d0d] border border-white/10 p-12 hover:border-[#97B34D]/60 hover:shadow-[0_0_20px_rgba(151,179,77,0.15)] hover:-translate-y-1 transition-all duration-200">
                   <div className="text-xs font-mono text-[#97B34D]/80 border border-[#97B34D]/40 px-2 py-1 inline-block mb-4 tracking-widest">
                     01
               </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 hover:text-[#97B34D] transition-colors duration-300">
+                  <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 hover:text-[#97B34D] transition-colors duration-150">
                     Accelerated Reviews
                   </h3>
-                  <p className="font-mono text-[#97B34D]/80 text-sm mb-4">30–60% faster drafting</p>
+                  <p className="font-mono text-[#97B34D]/80 text-sm mb-4">85–95% faster drafting</p>
                   <p className="text-sm text-white/70 leading-relaxed mb-6">
                     AI-assisted analysis and statutory mapping for rapid reviews across multiple agencies with real-time citation validation.
                   </p>
                   <div className="mt-6 border-t border-white/10 pt-3 flex items-center justify-between text-xs text-white/50 font-mono">
-                    <span>30–60%</span>
+                    <span>85–95%</span>
                     <span>Drafting Time Saved</span>
                   </div>
                 </div>
@@ -683,32 +804,12 @@ function App() {
                   <span>10k+</span>
                   <span>Comments Processed in 2 Hours</span>
               </div>
+              </div>
             </div>
-          </div>
           </div>
         </section>
 
-        <section className="bg-black text-white py-24">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-              <div className="md:col-span-5">
-                <h2 className="text-5xl font-bold mb-8 tracking-tight">Why It Matters</h2>
-                <h3 className="text-2xl font-bold mb-8 tracking-tight">Less Money. Fewer People. Same Deadlines.</h3>
-              </div>
-              <div className="md:col-span-7 space-y-8">
-                <p className="text-lg font-light leading-relaxed border-l-2 border-white pl-8">
-                  Agencies face −54% budgets and −23% staff cuts, yet must deliver 2-year EIS completions.
-                </p>
-                <p className="text-lg font-light leading-relaxed">
-                  OPEF turns compliance pressure into progress — a platform that sustains output, consistency, and defensibility at scale.
-                </p>
-                <p className="text-xl font-light leading-relaxed">
-                  Open Platform for Environmental Frameworks.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <WhyItMatters />
 
         <section 
           id="who-its-for"
@@ -723,7 +824,7 @@ function App() {
               <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-[0.9] text-[#2d3a2e]">Who It's For</h2>
               <h3 className="text-base md:text-lg font-mono text-[#2d3a2e]/60 mt-3">Built for the Builders of Policy.</h3>
                   </div>
-            
+
             {/* Persona Pills */}
             <div className="mb-4">
               <p className="font-mono text-xs text-[#2d3a2e]/50 mb-2 tracking-widest uppercase">
@@ -752,7 +853,7 @@ function App() {
             {currentPersona && (
               <div 
                 key={activePersona}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 transition-all duration-500 opacity-100 translate-y-0"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 transition-all duration-200 opacity-100 translate-y-0"
               >
                 {/* Left Content Area */}
                 <div className="lg:col-span-8">
@@ -788,7 +889,7 @@ function App() {
             </div>
                     <div className="font-mono text-xs md:text-sm text-[#2d3a2e]/60 mt-1">
                       {currentPersona.stat.label}
-                    </div>
+              </div>
                     
                     {/* Divider */}
                     <div className="my-6 border-t border-[#2d3a2e]/15"></div>
@@ -798,16 +899,16 @@ function App() {
                       <div className="flex items-center justify-between text-xs md:text-sm font-mono">
                         <span className="text-[#2d3a2e]/60">Before:</span>
                         <span className="text-[#2d3a2e]">{currentPersona.receipt.before}</span>
-                      </div>
+              </div>
                       <div className="flex items-center justify-between text-xs md:text-sm font-mono">
                         <span className="text-[#2d3a2e]/60">After:</span>
                         <span className="text-[#2d3a2e]">{currentPersona.receipt.after}</span>
-                      </div>
-                    </div>
+            </div>
+          </div>
                     
                     {/* Optional CTA */}
                     <div className="mt-6">
-                      <button className="inline-flex items-center gap-2 text-xs md:text-sm font-mono text-[#2d3a2e] underline underline-offset-4 hover:text-[#6E8D25] transition-colors duration-200">
+                      <button className="inline-flex items-center gap-2 text-xs md:text-sm font-mono text-[#2d3a2e] underline underline-offset-4 hover:text-[#6E8D25] transition-colors duration-100">
                         Learn more →
                       </button>
                   </div>
@@ -1099,11 +1200,11 @@ function App() {
             </div>
                 <div className="bg-white/80 border border-[#97B34D]/40 rounded-xl p-4">
                   <div className="text-sm font-mono text-[#2d3a2e]">Rulepack Library</div>
-                </div>
+          </div>
                 <div className="flex items-center gap-4">
                   <div className="w-4 h-4 bg-[#97B34D] rounded-full"></div>
                   <div className="flex-1 h-px bg-gradient-to-r from-[#97B34D] to-transparent"></div>
-                </div>
+          </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/80 border border-[#97B34D]/30 rounded-xl p-4">
                     <div className="text-sm font-mono text-[#2d3a2e]">Compliance Critique</div>
@@ -1135,14 +1236,14 @@ function App() {
                 </p>
                 <p className="text-xs font-mono text-[#2d3a2e]/60 mt-2">
                   Turns 400-page federal manuals into structured, machine-readable "rulepacks" in seconds.
-                </p>
-              </div>
+                  </p>
+                </div>
 
               {/* Step 2 - Encode */}
               <div className="space-y-3">
                 <div className="text-xs font-mono text-[#97B34D]/80 border border-[#97B34D]/40 px-2 py-1 inline-block tracking-widest">
                   02
-                </div>
+              </div>
                 <h3 className="text-xl font-bold tracking-tight text-[#2d3a2e]">Encode</h3>
                 <p className="text-sm text-[#2d3a2e]/80 leading-relaxed">
                   Domain experts annotate exceptions, conditions, and dependencies with versioning + multi-tenancy.
@@ -1150,13 +1251,13 @@ function App() {
                 <p className="text-xs font-mono text-[#2d3a2e]/60 mt-2">
                   Human expertise meets machine structure — policies become interactive logic maps.
                 </p>
-              </div>
+                    </div>
 
               {/* Step 3 - Deploy */}
               <div className="space-y-3">
                 <div className="text-xs font-mono text-[#97B34D]/80 border border-[#97B34D]/40 px-2 py-1 inline-block tracking-widest">
                   03
-                </div>
+                  </div>
                 <h3 className="text-xl font-bold tracking-tight text-[#2d3a2e]">Deploy</h3>
                 <p className="text-sm text-[#2d3a2e]/80 leading-relaxed">
                   LLM agents draft EA/EIS text via Scaffold Generator using validated rulepacks with embedded citations.
@@ -1164,13 +1265,13 @@ function App() {
                 <p className="text-xs font-mono text-[#2d3a2e]/60 mt-2">
                   AI drafts Environmental Assessments with citations already embedded — no manual cut-paste.
                 </p>
-              </div>
+                </div>
 
               {/* Step 4 - Explain */}
               <div className="space-y-3">
                 <div className="text-xs font-mono text-[#97B34D]/80 border border-[#97B34D]/40 px-2 py-1 inline-block tracking-widest">
                   04
-                </div>
+                  </div>
                 <h3 className="text-xl font-bold tracking-tight text-[#2d3a2e]">Explain</h3>
                 <p className="text-sm text-[#2d3a2e]/80 leading-relaxed">
                   Compliance Critique Agent generates audit checklist and immutable log bundled into Exported Compliance Package.
@@ -1178,15 +1279,15 @@ function App() {
                 <p className="text-xs font-mono text-[#2d3a2e]/60 mt-2">
                   Every paragraph is traceable. Every citation is verifiable. Every decision can be audited.
                 </p>
-              </div>
-            </div>
+                  </div>
+                </div>
 
             {/* Footer Caption */}
             <div className="mt-12 text-center">
               <p className="font-mono text-xs text-[#2d3a2e]/60">
                 Each step is explainable, version-controlled, and auditable.
               </p>
-            </div>
+                  </div>
 
             {/* System Modules */}
             <div className="mt-16 pt-8 border-t border-[#2d3a2e]/15">
@@ -1199,369 +1300,182 @@ function App() {
                   { name: 'Audit Exporter', caption: 'Packages deliverables' }
                 ].map((module, index) => (
                   <div key={index} className="group cursor-pointer">
-                    <div className="text-xs font-mono uppercase text-[#2d3a2e]/70 group-hover:text-[#97B34D] transition-colors duration-200 group-hover:underline">
+                    <div className="text-xs font-mono uppercase text-[#2d3a2e]/70 group-hover:text-[#97B34D] transition-colors duration-100 group-hover:underline">
                       {module.name}
-                    </div>
-                    <div className="text-xs font-mono text-[#2d3a2e]/50 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  </div>
+                    <div className="text-xs font-mono text-[#2d3a2e]/50 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
                       {module.caption}
-                    </div>
+                </div>
                   </div>
                 ))}
+              </div>
             </div>
-          </div>
           </div>
         </section>
 
         <section
-          id="proof"
+          id="team"
           ref={proofSectionRef}
-          className="relative min-h-screen bg-gradient-to-b from-[#F9FAF5] to-white overflow-hidden"
+          className="bg-white text-[#2d3a2e] py-24 md:py-32 relative"
         >
-          {/* Animated Metrics Strip */}
-          <motion.div
-            initial={{ y: -100, opacity: 0 }}
-            animate={metricsVisible ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative h-[25vh] bg-gradient-to-r from-[#DDE4C3] to-[#F0F4E8] flex items-center justify-center"
-          >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div 
-                className="h-full w-full"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2397B34D' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                }}
-              ></div>
+          {/* top/btm hairlines to bracket the section */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--olive-500)_30%,transparent)] to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--olive-500)_30%,transparent)] to-transparent" />
+
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Header */}
+            <div
+              ref={useReveal(0.2).ref}
+              className={`transition-all duration-300 ${
+                useReveal(0.2).visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+              }`}
+            >
+              <h2 className="text-5xl md:text-7xl font-black tracking-tight text-[#2d3a2e]">
+                {team.headline}
+              </h2>
+              <p className="mt-3 text-base md:text-lg text-[#2d3a2e]/70 max-w-3xl">
+                {team.subhead}
+              </p>
             </div>
 
-            {/* Desktop Layout */}
-            <div className="hidden md:flex items-center justify-center space-x-8 lg:space-x-16">
-              {/* 394 Sections */}
-              <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={metricsVisible ? { scale: 1 } : { scale: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-                  className="text-6xl lg:text-8xl font-black text-[#1D2B1D] font-mono"
-                >
-                  <CountUp
-                    start={0}
-                    end={394}
-                    duration={1.2}
-                    delay={0.5}
-                    enableScrollSpy
-                    scrollSpyOnce
-                  />
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                  transition={{ delay: 1.2, duration: 0.4 }}
-                  className="text-sm font-mono text-[#2B3228]/60 uppercase tracking-wider mt-2"
-                >
-                  sections parsed
-                </motion.div>
-              </div>
-
-              {/* Separator Dot */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={metricsVisible ? { scale: [1, 1.2, 1] } : { scale: 0 }}
-                transition={{ delay: 0.8, duration: 1.2, repeat: Infinity }}
-                className="w-3 h-3 bg-[#97B34D] rounded-full"
-              />
-
-              {/* 12s Clock */}
-              <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={metricsVisible ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -180 }}
-                  transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-                  className="text-6xl lg:text-8xl font-black text-[#1D2B1D] font-mono"
-                >
-                  12s
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                  transition={{ delay: 1.4, duration: 0.4 }}
-                  className="text-sm font-mono text-[#2B3228]/60 uppercase tracking-wider mt-2"
-                >
-                  DOE ingest
-                </motion.div>
-              </div>
-
-              {/* Separator Dot */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={metricsVisible ? { scale: [1, 1.2, 1] } : { scale: 0 }}
-                transition={{ delay: 1.0, duration: 1.2, repeat: Infinity }}
-                className="w-3 h-3 bg-[#97B34D] rounded-full"
-              />
-
-              {/* 72% Circular Progress */}
-              <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={metricsVisible ? { scale: 1 } : { scale: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
-                  className="relative w-20 h-20 lg:w-24 lg:h-24 mx-auto"
-                >
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#E5E5E5"
-                      strokeWidth="6"
-                      fill="none"
-                    />
-                    <motion.circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#97B34D"
-                      strokeWidth="6"
-                      fill="none"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: "0 251" }}
-                      animate={metricsVisible ? { strokeDasharray: "180 251" } : { strokeDasharray: "0 251" }}
-                      transition={{ delay: 1.0, duration: 1.5, ease: "easeOut" }}
-                    />
-                  </svg>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={metricsVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.0, duration: 0.4 }}
-                    className="absolute inset-0 flex items-center justify-center text-lg lg:text-2xl font-black text-[#1D2B1D] font-mono"
-                  >
-                    72%
-                  </motion.div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                  transition={{ delay: 2.2, duration: 0.4 }}
-                  className="text-sm font-mono text-[#2B3228]/60 uppercase tracking-wider mt-2"
-                >
-                  coverage
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Mobile Layout */}
-            <div className="md:hidden flex flex-col items-center space-y-8">
-              {/* Row 1: 394 and 12s */}
-              <div className="flex items-center space-x-12">
-                <div className="text-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={metricsVisible ? { scale: 1 } : { scale: 0 }}
-                    transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-                    className="text-4xl font-black text-[#1D2B1D] font-mono"
-                  >
-                    <CountUp
-                      start={0}
-                      end={394}
-                      duration={1.2}
-                      delay={0.5}
-                      enableScrollSpy
-                      scrollSpyOnce
-                    />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ delay: 1.2, duration: 0.4 }}
-                    className="text-xs font-mono text-[#2B3228]/60 uppercase tracking-wider mt-1"
-                  >
-                    sections parsed
-                  </motion.div>
-                </div>
-
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={metricsVisible ? { scale: [1, 1.2, 1] } : { scale: 0 }}
-                  transition={{ delay: 0.8, duration: 1.2, repeat: Infinity }}
-                  className="w-2 h-2 bg-[#97B34D] rounded-full"
-                />
-
-                <div className="text-center">
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={metricsVisible ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -180 }}
-                    transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-                    className="text-4xl font-black text-[#1D2B1D] font-mono"
-                  >
-                    12s
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ delay: 1.4, duration: 0.4 }}
-                    className="text-xs font-mono text-[#2B3228]/60 uppercase tracking-wider mt-1"
-                  >
-                    DOE ingest
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Row 2: 72% */}
-              <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={metricsVisible ? { scale: 1 } : { scale: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
-                  className="relative w-16 h-16 mx-auto"
-                >
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#E5E5E5"
-                      strokeWidth="6"
-                      fill="none"
-                    />
-                    <motion.circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#97B34D"
-                      strokeWidth="6"
-                      fill="none"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: "0 251" }}
-                      animate={metricsVisible ? { strokeDasharray: "180 251" } : { strokeDasharray: "0 251" }}
-                      transition={{ delay: 1.0, duration: 1.5, ease: "easeOut" }}
-                    />
-                  </svg>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={metricsVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.0, duration: 0.4 }}
-                    className="absolute inset-0 flex items-center justify-center text-sm font-black text-[#1D2B1D] font-mono"
-                  >
-                    72%
-                  </motion.div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                  transition={{ delay: 2.2, duration: 0.4 }}
-                  className="text-xs font-mono text-[#2B3228]/60 uppercase tracking-wider mt-1"
-                >
-                  coverage
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Proof Items */}
-          <div className="py-20 px-6">
-            <div className="max-w-6xl mx-auto">
-              {/* Section Title */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={metricsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="text-center mb-16"
-              >
-                <h2 className="text-5xl md:text-7xl font-black tracking-tight text-[#1D2B1D] mb-4">
-                  Proof & Traction
+            {/* THE TEAM Heading */}
+            <div className="mt-16 mb-8">
+              <div className="border-l-4 border-[#97B34D] pl-6">
+                <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-[0.9] text-[#2d3a2e]">
+                  THE TEAM
                 </h2>
-                <div className="w-32 h-1 bg-[#97B34D] mx-auto rounded-full"></div>
-              </motion.div>
+              </div>
+            </div>
 
-              {/* Proof Items Grid */}
-              <div className="space-y-8">
-                {[
-                  {
-                    title: "DOE Rulepack",
-                    description: "394 sections parsed in 12 seconds.",
-                    delay: 0
-                  },
-                  {
-                    title: "EA Critique", 
-                    description: "Mitigation gaps auto-flagged + CFR citations validated.",
-                    delay: 0.2
-                  },
-                  {
-                    title: "Dashboard",
-                    description: "72% compliance coverage visible at a glance.",
-                    delay: 0.4
-                  }
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={proofItemsVisible[index] ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-                    transition={{ delay: item.delay, duration: 0.6, ease: "easeOut" }}
-                    className="group relative bg-white/50 backdrop-blur-sm rounded-xl p-8 hover:bg-white/70 transition-all duration-300"
-                  >
-                    {/* Olive Left Border */}
-                    <motion.div
-                      initial={{ scaleY: 0 }}
-                      animate={proofItemsVisible[index] ? { scaleY: 1 } : { scaleY: 0 }}
-                      transition={{ delay: item.delay + 0.1, duration: 0.4 }}
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-[#97B34D] rounded-l-xl"
-                    />
-
-                    {/* Content */}
-                    <div className="pl-8">
-                      <motion.h3
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={proofItemsVisible[index] ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                        transition={{ delay: item.delay + 0.2, duration: 0.4 }}
-                        className="text-2xl font-bold text-[#1D2B1D] mb-3"
-                      >
-                        {item.title}
-                      </motion.h3>
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={proofItemsVisible[index] ? { opacity: 1 } : { opacity: 0 }}
-                        transition={{ delay: item.delay + 0.4, duration: 0.6 }}
-                        className="text-lg font-light text-[#2B3228]/70 leading-relaxed"
-                      >
-                        {item.description}
-                      </motion.p>
+            {/* Unified Team Grid - All Same Size */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Founders */}
+              {team.founders.map((member, index) => (
+                <motion.article
+                  key={member.name}
+                  className="group relative rounded-2xl border border-[color-mix(in_srgb,var(--olive-500)_22%,transparent)] bg-white/90 backdrop-blur-[2px] p-6 hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3, ease: "easeOut", delay: index * 0.05 }}
+                  tabIndex={0}
+                >
+                  {/* Olive left rail */}
+                  <span className="absolute left-0 top-5 bottom-5 w-[3px] rounded-full bg-[color-mix(in_srgb,var(--olive-500)_55%,transparent)] opacity-70" />
+                  
+                  <div className="flex flex-col items-center text-center">
+                    {/* Avatar */}
+                    <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-[var(--ink-800)] ring-1 ring-[color-mix(in_srgb,var(--olive-500)_22%,transparent)] mb-4">
+                      <img 
+                        src={member.headshot} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        style={{
+                          objectPosition: member.name === 'Conner Brown' ? 'center 30%' :
+                                         member.name === 'Memme Onwudiwe' ? 'center 25%' :
+                                         member.name === 'Matt Bixler' ? 'center 30%' :
+                                         'center'
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'grid';
+                        }}
+                      />
+                      <div className="w-full h-full grid place-items-center text-xl font-bold text-[var(--paper)]/70 hidden">
+                        {member.name.split(" ").map(p => p[0]).join("").slice(0,2)}
+                      </div>
                     </div>
+                    
+                    {/* Content */}
+                    <h3 className="text-lg font-bold tracking-tight text-[#2d3a2e]">
+                      {member.name}
+                    </h3>
+                    <p className="text-sm font-mono text-[#2d3a2e]/60 mt-1">{member.title}</p>
+                    
+                    {/* Tags */}
+                    <div className="mt-4 flex flex-wrap gap-1.5 justify-center">
+                      {member.tags.map(tag => (
+                        <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-md border border-[#97B34D]/30 text-[10px] font-mono tracking-wider text-[#97B34D] bg-white/80">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
 
-                    {/* Hover Highlight */}
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      className="absolute inset-0 bg-gradient-to-r from-[#97B34D]/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    />
-                  </motion.div>
-                ))}
+              {/* Advisors */}
+              {team.advisors.map((member, index) => (
+                <motion.article
+                  key={member.name}
+                  className="group relative rounded-2xl border border-[color-mix(in_srgb,var(--olive-500)_22%,transparent)] bg-white/90 backdrop-blur-[2px] p-6 hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, ease: "easeOut", delay: (team.founders.length + index) * 0.1 }}
+                  tabIndex={0}
+                >
+                  {/* Olive left rail */}
+                  <span className="absolute left-0 top-5 bottom-5 w-[3px] rounded-full bg-[color-mix(in_srgb,var(--olive-500)_55%,transparent)] opacity-70" />
+                  
+                  <div className="flex flex-col items-center text-center">
+                    {/* Avatar */}
+                    <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden bg-[var(--ink-800)] ring-1 ring-[color-mix(in_srgb,var(--olive-500)_22%,transparent)] mb-4">
+                      <img 
+                        src={member.headshot} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        style={{
+                          objectPosition: member.name === 'Conner Brown' ? 'center 30%' :
+                                         member.name === 'Memme Onwudiwe' ? 'center 25%' :
+                                         member.name === 'Matt Bixler' ? 'center 30%' :
+                                         'center'
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'grid';
+                        }}
+                      />
+                      <div className="w-full h-full grid place-items-center text-xl font-bold text-[var(--paper)]/70 hidden">
+                        {member.name.split(" ").map(p => p[0]).join("").slice(0,2)}
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <h3 className="text-lg font-bold tracking-tight text-[#2d3a2e]">
+                      {member.name}
+                    </h3>
+                    <p className="text-sm font-mono text-[#2d3a2e]/60 mt-1">{member.title}</p>
+                    
+                    {/* Tags */}
+                    <div className="mt-4 flex flex-wrap gap-1.5 justify-center">
+                      {member.tags?.map(tag => (
+                        <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-md border border-[#97B34D]/30 text-[10px] font-mono tracking-wider text-[#97B34D] bg-white/80">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+
+            {/* Ticker / proof strip */}
+            <div className="mt-12 relative overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--olive-500)_18%,transparent)] bg-white/70">
+              <div className="py-3 whitespace-nowrap animate-marquee font-mono text-xs tracking-[0.22em] text-[#2d3a2e]/70">
+                <span className="mx-10">
+                  {team.proofLine} • TESTED BY POLICY • AUDIT-READY BY DESIGN • DEFENSIBLE BY DEFAULT
+                </span>
+                <span className="mx-10">
+                  {team.proofLine} • TESTED BY POLICY • AUDIT-READY BY DESIGN • DEFENSIBLE BY DEFAULT
+                </span>
               </div>
-
-              {/* Partner Note */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={proofItemsVisible[2] ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={{ delay: 1.0, duration: 0.6 }}
-                className="mt-16 pt-8 border-t border-[#97B34D]/20"
-              >
-                <p className="text-lg font-light text-[#2B3228]/80 text-center">
-                  In early talks with Sphera (Blackstone) for co-development partnership
-                </p>
-                <p className="mt-3 font-mono text-sm text-[#2B3228]/45 tracking-wider uppercase text-center">
-                  Open Platform for Environmental Frameworks.
-                </p>
-              </motion.div>
-                </div>
-              </div>
-
-          {/* Bottom Expanding Rule */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true, margin: "-20%" }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-[#97B34D] to-transparent rounded-full"
-          />
+            </div>
+          </div>
         </section>
 
         <section 
@@ -1573,7 +1487,7 @@ function App() {
           <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={visionCountersVisible ? { y: 0, opacity: 1 } : { y: -50, opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-[#F9FAF5] to-[#F0F4E8] border-b border-[#97B34D]/20"
           >
             <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
@@ -1588,7 +1502,7 @@ function App() {
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={visionCountersVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                  transition={{ delay: item.delay, duration: 0.6 }}
+                  transition={{ delay: item.delay, duration: 0.3 }}
                   className="text-center"
                 >
                   <div className="text-3xl font-black text-[#1D2B1D] font-mono">
@@ -1600,6 +1514,8 @@ function App() {
                       enableScrollSpy
                       scrollSpyOnce
                       suffix={item.value.includes('%') ? '%' : item.value.includes('+') ? '+' : ''}
+                      separator=""
+                      decimal=""
                     />
                     </div>
                   <div className="text-xs font-mono text-[#2B3228]/60 uppercase tracking-wider mt-1">
@@ -1619,7 +1535,7 @@ function App() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={visionTextVisible ? { opacity: 1 } : { opacity: 0 }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
                   className="mb-8"
                 >
                   <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-none text-[#1D2B1D]">
@@ -1634,7 +1550,7 @@ function App() {
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={visionTextVisible ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
-                  transition={{ delay: 1.5, duration: 0.6, ease: "easeOut" }}
+                  transition={{ delay: 0.6, duration: 0.3, ease: "easeOut" }}
                   className="mb-12"
                 >
                   <h3 className="text-2xl font-bold tracking-tight text-[#1D2B1D]">
@@ -1644,7 +1560,7 @@ function App() {
                   <motion.div
                     initial={{ scaleX: 0 }}
                     animate={visionTextVisible ? { scaleX: 1 } : { scaleX: 0 }}
-                    transition={{ delay: 2.0, duration: 0.8 }}
+                    transition={{ delay: 0.8, duration: 0.4 }}
                     className="w-32 h-1 bg-[#97B34D] mt-2 origin-left"
                   />
                 </motion.div>
@@ -1653,13 +1569,13 @@ function App() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={visionTextVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  transition={{ delay: 2.2, duration: 0.8 }}
+                  transition={{ delay: 0.9, duration: 0.4 }}
                   className="space-y-6 text-lg font-light leading-relaxed"
                 >
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={visionTextVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.4, duration: 0.6 }}
+                    transition={{ delay: 1.0, duration: 0.3 }}
                     className="text-[#2B3228]/80"
                   >
                     OPEF is rebuilding it—open, interoperable, and explainable.
@@ -1667,7 +1583,7 @@ function App() {
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={visionTextVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.6, duration: 0.6 }}
+                    transition={{ delay: 1.1, duration: 0.3 }}
                     className="text-[#2B3228]/80"
                   >
                     We're creating the first shared library of environmental logic:
@@ -1676,7 +1592,7 @@ function App() {
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={visionTextVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.8, duration: 0.6 }}
+                    transition={{ delay: 1.2, duration: 0.3 }}
                     className="text-[#2B3228]/80 font-medium"
                   >
                     When regulation becomes infrastructure,
@@ -1690,11 +1606,11 @@ function App() {
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={visionTextVisible ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-                  transition={{ delay: 2.0, duration: 0.8 }}
+                  transition={{ delay: 0.8, duration: 0.4 }}
                   className="relative w-80 h-80"
                 >
-                  {/* Concentric Rings */}
-                  {[0, 1, 2, 3].map((ring, index) => (
+                  {/* Rotating Rings */}
+                  {[0, 1, 2].map((ring, index) => (
                     <motion.div
                       key={ring}
                       initial={{ scale: 0, opacity: 0 }}
@@ -1706,76 +1622,77 @@ function App() {
                       }}
                       className="absolute inset-0 rounded-full border-2 border-[#97B34D]/30"
                       style={{
-                        width: `${100 - (ring * 20)}%`,
-                        height: `${100 - (ring * 20)}%`,
-                        top: `${ring * 10}%`,
-                        left: `${ring * 10}%`,
+                        width: `${100 - (ring * 25)}%`,
+                        height: `${100 - (ring * 25)}%`,
+                        top: `${ring * 12.5}%`,
+                        left: `${ring * 12.5}%`,
                       }}
                     >
-                      {/* Pulsing Animation */}
+                      {/* Rotating Animation */}
                       <motion.div
-                        animate={{ 
-                          scale: [1, 1.1, 1],
-                          opacity: [0.3, 0.6, 0.3]
-                        }}
+                        animate={{ rotate: 360 }}
                         transition={{ 
-                          duration: 2 + (index * 0.5),
+                          duration: 8 + (index * 2),
                           repeat: Infinity,
-                          delay: index * 0.3
+                          ease: "linear"
                         }}
                         className="w-full h-full rounded-full border border-[#97B34D]/50"
                       />
                     </motion.div>
                   ))}
 
-                  {/* Center Circle */}
+                  {/* Rotating Dots */}
+                  {[0, 1, 2].map((ringIndex, index) => (
+                    <motion.div
+                      key={`dots-${ringIndex}`}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={visionTextVisible ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+                      transition={{ delay: 2.8 + (index * 0.2), duration: 0.6 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <motion.div
+                        animate={{ rotate: index % 2 === 0 ? 360 : -360 }}
+                        transition={{ 
+                          duration: 6 + (index * 2),
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                        className="relative"
+                        style={{
+                          width: `${100 - (ringIndex * 25)}%`,
+                          height: `${100 - (ringIndex * 25)}%`,
+                        }}
+                      >
+                        {/* Dots positioned around the ring */}
+                        {Array.from({ length: 8 + (ringIndex * 4) }).map((_, dotIndex) => (
+                          <div
+                            key={dotIndex}
+                            className="absolute w-2 h-2 bg-[#97B34D] rounded-full"
+                            style={{
+                              top: '50%',
+                              left: '50%',
+                              transformOrigin: '0 0',
+                              transform: `rotate(${(dotIndex * 360) / (8 + (ringIndex * 4))}deg) translateY(-${50 - (ringIndex * 12.5)}%)`,
+                            }}
+                          />
+                        ))}
+                      </motion.div>
+                    </motion.div>
+                  ))}
+
+                  {/* Center Circle - Fixed */}
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={visionTextVisible ? { scale: 1 } : { scale: 0 }}
-                    transition={{ delay: 3.0, duration: 0.6 }}
+                    transition={{ delay: 1.2, duration: 0.3 }}
                     className="absolute inset-0 flex items-center justify-center"
                   >
                     <div className="w-16 h-16 bg-[#97B34D] rounded-full flex items-center justify-center">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                        className="text-white font-mono text-xs"
-                      >
+                      <div className="text-white font-mono text-xs font-bold">
                         OPEF
-                      </motion.div>
-            </div>
+                      </div>
+                    </div>
                   </motion.div>
-
-                  {/* Proof Particles */}
-                  {[0, 1, 2, 3, 4, 5].map((particle) => (
-                    <motion.div
-                      key={particle}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={visionTextVisible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
-                      transition={{ 
-                        delay: 3.2 + (particle * 0.1),
-                        duration: 0.4
-                      }}
-                      className="absolute w-2 h-2 bg-[#97B34D] rounded-full"
-                      style={{
-                        top: `${20 + (particle * 12)}%`,
-                        left: `${15 + (particle * 14)}%`,
-                      }}
-                    >
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.5, 1],
-                          opacity: [0.6, 1, 0.6]
-                        }}
-                        transition={{ 
-                          duration: 1.5,
-                          repeat: Infinity,
-                          delay: particle * 0.2
-                        }}
-                        className="w-full h-full bg-[#97B34D]/50 rounded-full"
-                      />
-                    </motion.div>
-                  ))}
                 </motion.div>
           </div>
             </div>
@@ -1786,7 +1703,7 @@ function App() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 1.0, delay: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="absolute inset-0 pointer-events-none"
           >
             <div 
@@ -1809,7 +1726,7 @@ function App() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-20%" }}
-            transition={{ duration: 1.5 }}
+            transition={{ duration: 0.8 }}
             className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black pointer-events-none"
           />
 
@@ -1930,11 +1847,11 @@ function App() {
                 </motion.div>
 
                 {/* Form with enhanced interactions */}
-                {!betaFormSubmitted ? (
+                {true ? (
                   <motion.form
                     initial={{ opacity: 0 }}
                     animate={betaVisible ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ delay: 2.4, duration: 0.6 }}
+                    transition={{ delay: 1.0, duration: 0.3 }}
                     onSubmit={handleSubmit}
                     className="space-y-8"
                   >
@@ -1946,10 +1863,9 @@ function App() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
                     required
-                        className="flex-1 bg-transparent border-2 border-white px-6 py-4 text-lg font-mono focus:outline-none focus:border-[#A2B879] focus:ring-2 focus:ring-[#A2B879]/20 transition-all duration-300"
+                        className="flex-1 bg-transparent border-2 border-white px-6 py-4 text-lg font-mono focus:outline-none focus:border-[#97B34D] focus:ring-2 focus:ring-[#97B34D]/20 transition-all duration-300 placeholder:text-[#7E7E7E] placeholder:italic"
                         style={{ 
-                          color: '#F9FAF5',
-                          '::placeholder': { color: '#7E7E7E', fontStyle: 'italic' }
+                          color: email ? '#97B34D' : '#F9FAF5'
                         }}
                         whileFocus={{ scale: 1.02 }}
                       />
@@ -1969,7 +1885,7 @@ function App() {
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={betaVisible ? { opacity: 1 } : { opacity: 0 }}
-                      transition={{ delay: 2.6, duration: 0.6 }}
+                      transition={{ delay: 1.1, duration: 0.3 }}
                       className="text-xs font-mono"
                       style={{ color: '#7E7E7E' }}
                     >
