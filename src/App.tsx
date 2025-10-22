@@ -386,6 +386,33 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* JSON-LD Structured Data */}
+      <script 
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "OPEF Platform",
+            applicationCategory: "Environmental Management",
+            operatingSystem: "Web",
+            url: "https://opefnewwebsite.vercel.app",
+            description: "OPEF converts environmental regulations into machine-readable rulepacks, enabling explainable AI compliance.",
+            offers: {
+              "@type": "Offer",
+              availability: "https://schema.org/PreOrder",
+              price: "0",
+              priceCurrency: "USD"
+            },
+            creator: {
+              "@type": "Organization",
+              name: "Open Platform for Environmental Frameworks",
+              url: "https://opefnewwebsite.vercel.app"
+            }
+          })
+        }}
+      />
+      
       <OpefNavbar />
       
       <div className="absolute inset-0 pointer-events-none">
@@ -397,7 +424,7 @@ function App() {
       <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-12">
 
-          <section className="relative overflow-hidden bg-black text-white mb-48">
+          <header className="relative overflow-hidden bg-black text-white mb-48">
             {/* soft olive wash + faint grid */}
             <div
               aria-hidden
@@ -463,7 +490,7 @@ function App() {
                       <div className="absolute -left-4 top-1 bottom-1 w-px bg-white/15" />
                       <div className="absolute -left-4 top-1 w-1.5 h-1.5 rounded-[2px] bg-[#97B34D]" />
                       <p className="text-base leading-relaxed font-light text-white/80">
-                        OPEF transforms environmental compliance from a consulting bottleneck into an AI-driven system.
+                        OPEF transforms environmental compliance from a consulting bottleneck into an AI-driven system. Our machine-literate environmental governance platform automates NEPA, CWA, ESA, and NHPA procedures with explainable AI compliance.
                       </p>
                     </div>
 
@@ -471,7 +498,7 @@ function App() {
                       <div className="absolute -left-4 top-1 bottom-1 w-px bg-white/15" />
                       <div className="absolute -left-4 top-1 w-1.5 h-1.5 rounded-[2px] bg-[#97B34D]" />
                       <p className="text-base leading-relaxed font-light text-white/80">
-                        Built for agencies and contractors modernizing under the OMB M-25-21 federal AI mandate.
+                        Built for agencies and contractors modernizing under the OMB M-25-21 federal AI mandate. Our environmental rulepack AI system delivers audit-ready compliance automation.
                         <br />
                         <span className="inline-block mt-2">
                           ↳ From rulebooks to audit-ready drafts — <em>in hours, not years.</em>
@@ -497,22 +524,31 @@ function App() {
                   className="flex justify-center lg:justify-end lg:pl-8 lg:pr-12"
                 >
                   <div className="w-full max-w-xl lg:max-w-2xl">
-                    <RotatingEarth 
+                    <RotatingEarth
                       width={494} 
                       height={494} 
                       className="opacity-90 hover:opacity-100 transition-opacity duration-300" 
                     />
+                    <noscript>
+                      <img 
+                        src="/assets/og-image.svg" 
+                        alt="Global environmental network visualization showing interconnected regulatory frameworks" 
+                        className="w-full h-auto"
+                      />
+                    </noscript>
                   </div>
                 </motion.div>
               </div>
           </div>
-        </section>
+          </header>
         </div>
 
-        <section 
+        <main 
           id="platform"
           ref={setSection2Ref}
           className="bg-white text-[#2d3a2e] py-24 mb-0 relative overflow-hidden"
+          itemScope 
+          itemType="https://schema.org/SoftwareApplication"
           style={{
             '--fill-progress': fillProgress,
             '--heading-mix': headingMix,
@@ -730,7 +766,7 @@ function App() {
               }}
             />
           </div>
-        </section>
+        </main>
 
         <section 
           id="features"
@@ -1317,6 +1353,8 @@ function App() {
           id="team"
           ref={proofSectionRef}
           className="bg-white text-[#2d3a2e] py-24 md:py-32 relative"
+          itemScope 
+          itemType="https://schema.org/Organization"
         >
           {/* top/btm hairlines to bracket the section */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--olive-500)_30%,transparent)] to-transparent" />
@@ -1953,7 +1991,7 @@ function App() {
           </motion.div>
         </section>
 
-        <footer className="bg-white text-[#2d3a2e] py-16">
+        <footer className="bg-white text-[#2d3a2e] py-16" role="contentinfo">
           <div className="max-w-7xl mx-auto px-6">
             <div className="border-t border-[#2d3a2e]/20 pt-16 pb-12">
               <div className="text-center mb-8">
