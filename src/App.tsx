@@ -14,6 +14,7 @@ function App() {
   const [section2Ref, setSection2Ref] = useState<HTMLElement | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [activePersona, setActivePersona] = useState<'agencies'|'consulting'|'sustainability'|'researchers'>('agencies');
+  const [isAutoRotating, setIsAutoRotating] = useState(true);
   const proofSectionRef = useRef(null);
   const [visionCountersVisible, setVisionCountersVisible] = useState(false);
   const [visionTextVisible, setVisionTextVisible] = useState(false);
@@ -376,6 +377,21 @@ function App() {
   ];
 
   const currentPersona = personas.find(p => p.id === activePersona);
+
+  // Auto-rotation for persona buttons
+  useEffect(() => {
+    if (!isAutoRotating) return;
+    
+    const personaIds: ('agencies'|'consulting'|'sustainability'|'researchers')[] = ['agencies', 'consulting', 'sustainability', 'researchers'];
+    let currentIndex = 0;
+    
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % personaIds.length;
+      setActivePersona(personaIds[currentIndex]);
+    }, 5000); // 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [isAutoRotating]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -864,7 +880,7 @@ function App() {
             {/* Persona Pills */}
             <div className="mb-4">
               <p className="font-mono text-xs text-[#2d3a2e]/50 mb-2 tracking-widest uppercase">
-                Hover to explore all four roles →
+                Auto-rotating every 5 seconds • Hover to pause →
               </p>
                   </div>
             
@@ -872,7 +888,15 @@ function App() {
               {personas.map((persona) => (
                 <button
                   key={persona.id}
-                  onMouseEnter={() => setActivePersona(persona.id)}
+                  onMouseEnter={() => {
+                    setActivePersona(persona.id);
+                    setIsAutoRotating(false);
+                  }}
+                  onMouseLeave={() => setIsAutoRotating(true)}
+                  onClick={() => {
+                    setActivePersona(persona.id);
+                    setIsAutoRotating(false);
+                  }}
                   className={`text-xs md:text-sm font-mono uppercase tracking-wider px-3.5 py-2 rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-[#97B34D] focus:ring-offset-2 ${
                     activePersona === persona.id
                       ? 'bg-[#97B34D] border-[#97B34D] text-white'
