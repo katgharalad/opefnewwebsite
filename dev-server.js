@@ -3,12 +3,18 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3001;
+
+// Initialize Supabase
+const supabaseUrl = process.env.SUPABASE_URL || 'https://xkovxlzsmiyaeoswwqko.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3Z4bHpzbWl5YWVvc3d3cWtvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTU4NjcyMCwiZXhwIjoyMDc3MTYyNzIwfQ.OgkUucWYC0cvjQdwYm8boTRXQU-1y7fvuTVp2bmXqQE';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -32,7 +38,7 @@ if (!fs.existsSync(dataDir)) {
 const signupsFile = path.join(dataDir, 'beta-signups.json');
 
 // POST /api/beta-signup
-app.post('/api/beta-signup', (req, res) => {
+app.post('/api/beta-signup', async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -47,45 +53,50 @@ app.post('/api/beta-signup', (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    
+    // Check if email already exists in Supabase
+    const { data: existingSignup } = await supabase
+      .from('opef_waitlist')
+      .select('email')
+      .eq('email', normalizedEmail)
+      .single();
 
-    // Read existing signups
-    let signups = [];
-    if (fs.existsSync(signupsFile)) {
-      try {
-        const fileData = fs.readFileSync(signupsFile, 'utf-8');
-        signups = JSON.parse(fileData);
-      } catch (err) {
-        console.error('Error reading signups:', err);
-        signups = [];
-      }
-    }
-
-    // Check for duplicates
-    const existingSignup = signups.find(s => s.email === normalizedEmail);
     if (existingSignup) {
+      // Get total count
+      const { count } = await supabase
+        .from('opef_waitlist')
+        .select('*', { count: 'exact', head: true });
+      
       return res.status(409).json({ 
         error: 'Email already registered',
-        count: signups.length 
+        count: count || 0
       });
     }
 
-    // Add new signup
-    const newSignup = {
-      email: normalizedEmail,
-      timestamp: new Date().toISOString()
-    };
+    // Insert new signup into Supabase
+    const { error: insertError } = await supabase
+      .from('opef_waitlist')
+      .insert({
+        email: normalizedEmail,
+        created_at: new Date().toISOString()
+      });
 
-    signups.push(newSignup);
+    if (insertError) {
+      console.error('Supabase insert error:', insertError);
+      throw insertError;
+    }
 
-    // Write back to file
-    fs.writeFileSync(signupsFile, JSON.stringify(signups, null, 2), 'utf-8');
+    // Get total count
+    const { count } = await supabase
+      .from('opef_waitlist')
+      .select('*', { count: 'exact', head: true });
 
-    console.log(`✅ New signup: ${normalizedEmail} (Total: ${signups.length})`);
+    console.log(`✅ New signup: ${normalizedEmail} (Total: ${count || 0})`);
 
     res.status(200).json({
       success: true,
       message: 'Email registered successfully',
-      count: signups.length,
+      count: count || 0,
       email: normalizedEmail
     });
 
@@ -96,22 +107,28 @@ app.post('/api/beta-signup', (req, res) => {
 });
 
 // GET /api/get-signups
-app.get('/api/get-signups', (req, res) => {
+app.get('/api/get-signups', async (req, res) => {
   try {
-    let signups = [];
-    
-    if (fs.existsSync(signupsFile)) {
-      try {
-        const fileData = fs.readFileSync(signupsFile, 'utf-8');
-        signups = JSON.parse(fileData);
-      } catch (err) {
-        console.error('Error reading signups:', err);
-      }
-    }
+    // Fetch signups from Supabase, ordered by created_at descending
+    const { data: signups, error } = await supabase
+      .from('opef_waitlist')
+      .select('email, created_at')
+      .order('created_at', { ascending: false });
 
+    if (error) {
+      console.error('Supabase fetch error:', error);
+      return res.status(500).json({ error: 'Failed to fetch signups' });
+    }
+    
+    // Map created_at to timestamp for frontend compatibility
+    const formattedSignups = signups?.map(s => ({
+      email: s.email,
+      timestamp: s.created_at
+    })) || [];
+    
     res.status(200).json({
-      count: signups.length,
-      signups: signups
+      count: formattedSignups.length,
+      signups: formattedSignups
     });
 
   } catch (error) {

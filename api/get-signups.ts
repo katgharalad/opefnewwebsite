@@ -1,39 +1,35 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from './firebase-admin';
+import { supabase } from './supabase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow GET requests
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    if (db) {
-      // Use Firebase if available
-      const signupsRef = db.collection('beta_signups');
-      const snapshot = await signupsRef.orderBy('timestamp', 'desc').get();
-      
-      const signups = snapshot.docs.map(doc => ({
-        email: doc.data().email,
-        timestamp: doc.data().timestamp
-      }));
+    // Fetch signups from Supabase, ordered by created_at descending
+    const { data: signups, error } = await supabase
+      .from('opef_waitlist')
+      .select('email, created_at')
+      .order('created_at', { ascending: false });
 
-      return res.status(200).json({
-        count: signups.length,
-        signups: signups
-      });
-    } else {
-      // Fallback to in-memory storage
-      const inMemorySignups = (global as any).signups || [];
-      
-      return res.status(200).json({
-        count: inMemorySignups.length,
-        signups: inMemorySignups
-      });
+    if (error) {
+      console.error('Supabase fetch error:', error);
+      return res.status(500).json({ error: 'Failed to fetch signups' });
     }
-
+    
+    // Map created_at to timestamp for frontend compatibility
+    const formattedSignups = signups?.map(s => ({
+      email: s.email,
+      timestamp: s.created_at
+    })) || [];
+    
+    return res.status(200).json({
+      count: formattedSignups.length,
+      signups: formattedSignups
+    });
   } catch (error) {
     console.error('Error reading signups:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
