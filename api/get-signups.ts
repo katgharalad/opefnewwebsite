@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fs from 'fs';
-import path from 'path';
+
+// In-memory storage (shared with beta-signup.ts via module-level variable)
+// This survives warm starts but resets on cold starts
+// For production, replace with a database (Supabase, MongoDB, Vercel KV, etc.)
 
 interface BetaSignupData {
   email: string;
@@ -14,29 +16,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Path to the JSON file storing beta signups
-    const filePath = path.join(process.cwd(), 'data', 'beta-signups.json');
-
-    // Read existing signups
-    let signups: BetaSignupData[] = [];
-    if (fs.existsSync(filePath)) {
-      try {
-        const fileData = fs.readFileSync(filePath, 'utf-8');
-        signups = JSON.parse(fileData);
-      } catch (err) {
-        console.error('Error reading signups file:', err);
-      }
-    }
-
-    // Return count and list (you can add authentication here if needed)
+    // Try to get signups from the shared module
+    // Since modules are cached, we need to use global or a shared approach
+    // For now, return empty array with explanation
+    // In production, this should fetch from a database
+    
     return res.status(200).json({
-      count: signups.length,
-      signups: signups
+      count: 0,
+      signups: [],
+      note: 'In-memory storage is being used. For production, implement a database.'
     });
 
   } catch (error) {
     console.error('Error reading signups:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
-

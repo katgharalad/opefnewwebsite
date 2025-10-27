@@ -1,11 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fs from 'fs';
-import path from 'path';
 
-interface BetaSignupData {
-  email: string;
-  timestamp: string;
-}
+// In-memory storage (survives warm starts, resets on cold starts)
+// For production, replace this with a database
+let signups: Array<{ email: string; timestamp: string }> = [];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST requests
@@ -30,49 +27,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Normalize email to lowercase
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Create data directory if it doesn't exist
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    // Path to the JSON file storing beta signups
-    const filePath = path.join(dataDir, 'beta-signups.json');
-
-    // Read existing signups
-    let signups: BetaSignupData[] = [];
-    if (fs.existsSync(filePath)) {
-      try {
-        const fileData = fs.readFileSync(filePath, 'utf-8');
-        signups = JSON.parse(fileData);
-      } catch (err) {
-        console.error('Error reading signups file:', err);
-        // If file exists but can't be read, start fresh
-        signups = [];
-      }
-    }
-
-    // Check if email already exists
-    const existingSignup = signups.find(s => s.email === normalizedEmail);
-    if (existingSignup) {
+    // Check for duplicates
+    if (signups.some(s => s.email === normalizedEmail)) {
       return res.status(409).json({ 
         error: 'Email already registered',
         count: signups.length 
       });
     }
 
-    // Add new signup
-    const newSignup: BetaSignupData = {
+    // Add to in-memory storage
+    signups.push({
       email: normalizedEmail,
       timestamp: new Date().toISOString()
-    };
+    });
 
-    signups.push(newSignup);
+    console.log(`✅ New signup: ${normalizedEmail} (Total: ${signups.length})`);
 
-    // Write back to file
-    fs.writeFileSync(filePath, JSON.stringify(signups, null, 2), 'utf-8');
-
-    // Return success with count
     return res.status(200).json({
       success: true,
       message: 'Email registered successfully',
