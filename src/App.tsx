@@ -2,11 +2,38 @@ import { ArrowRight, Box, CheckCircle2, CircuitBoard, FileText, ShieldCheck } fr
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import OpefNavbar from './OpefNavbar';
 import WhyItMatters from './WhyItMatters';
 import RotatingEarth from '@/components/ui/wireframe-dotted-globe';
+import RulepacksPage from './RulepacksPage';
+import MetricsPage from './MetricsPage';
+import SecurityPage from './SecurityPage';
+import DocsPage from './DocsPage';
+import InsightsPage from './InsightsPage';
+import AdminSignups from './AdminSignups';
+import CustomCursor from './components/ui/CustomCursor';
 
 function App() {
+  return (
+    <CustomCursor>
+      <Router>
+        <Routes>
+          <Route path="/rulepacks" element={<RulepacksPage />} />
+          <Route path="/metrics" element={<MetricsPage />} />
+          <Route path="/security" element={<SecurityPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/admin/signups" element={<AdminSignups />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+      </Router>
+    </CustomCursor>
+  );
+}
+
+function HomePage() {
   const [email, setEmail] = useState('');
   const [displayText, setDisplayText] = useState('');
   const [showCursor, setShowCursor] = useState(true);
@@ -22,6 +49,10 @@ function App() {
   const visionSectionRef = useRef(null);
   const [betaVisible, setBetaVisible] = useState(false);
   const betaSectionRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [signupCount, setSignupCount] = useState<number | null>(null);
 
   const fullText = "Bury Bureaucracy. Work Easier.";
 
@@ -393,10 +424,41 @@ function App() {
     return () => clearInterval(interval);
   }, [isAutoRotating]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      // Form submitted
+    if (!email) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('/api/beta-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        setSignupCount(data.count);
+        setEmail('');
+        
+        // Show success state
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 4000);
+      } else {
+        setSubmitError(data.error || 'Something went wrong. Please try again.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitError('Network error. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -1909,7 +1971,7 @@ function App() {
                 </motion.div>
 
                 {/* Form with enhanced interactions */}
-                {true ? (
+                {!isSubmitted ? (
                   <motion.form
                     initial={{ opacity: 0 }}
                     animate={betaVisible ? { opacity: 1 } : { opacity: 0 }}
@@ -1922,10 +1984,14 @@ function App() {
                       <motion.input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setSubmitError(null);
+                    }}
                     placeholder="your@email.com"
                     required
-                        className="flex-1 bg-transparent border-2 border-white px-6 py-4 text-lg font-mono focus:outline-none focus:border-[#97B34D] focus:ring-2 focus:ring-[#97B34D]/20 transition-all duration-300 placeholder:text-[#7E7E7E] placeholder:italic"
+                    disabled={isSubmitting}
+                        className="flex-1 bg-transparent border-2 border-white px-6 py-4 text-lg font-mono focus:outline-none focus:border-[#97B34D] focus:ring-2 focus:ring-[#97B34D]/20 transition-all duration-300 placeholder:text-[#7E7E7E] placeholder:italic disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ 
                           color: email ? '#97B34D' : '#F9FAF5'
                         }}
@@ -1935,14 +2001,31 @@ function App() {
                       {/* CTA button with inverted hover */}
                       <motion.button
                     type="submit"
-                        className="group bg-white text-[#0C0E0A] px-12 py-4 font-bold hover:bg-[#A2B879] hover:text-white border-2 border-white transition-all duration-300 flex items-center justify-center gap-3 text-lg relative overflow-hidden"
+                    disabled={isSubmitting}
+                        className="group bg-white text-[#0C0E0A] px-12 py-4 font-bold hover:bg-[#A2B879] hover:text-white border-2 border-white transition-all duration-300 flex items-center justify-center gap-3 text-lg relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <span className="relative z-10">Request Early Access</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
+                        {isSubmitting ? (
+                          <span className="relative z-10">Submitting...</span>
+                        ) : (
+                          <>
+                            <span className="relative z-10">Request Early Access</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
+                          </>
+                        )}
                       </motion.button>
                 </div>
+                    
+                    {submitError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm font-mono text-red-400"
+                      >
+                        {submitError}
+                      </motion.p>
+                    )}
                     
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -1978,6 +2061,11 @@ function App() {
                       style={{ color: '#A8B97B' }}
                     >
                       You'll hear from us soon.
+                      {signupCount !== null && (
+                        <span className="block mt-2 text-xs" style={{ color: '#7E7E7E' }}>
+                          {signupCount} early access request{signupCount !== 1 ? 's' : ''} ahead of you
+                        </span>
+                      )}
                     </motion.p>
                   </motion.div>
             )}

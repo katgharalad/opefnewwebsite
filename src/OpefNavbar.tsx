@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import OpefMenu from './OpefMenu';
 
 const OpefNavbar: React.FC = () => {
@@ -98,45 +99,83 @@ const OpefNavbar: React.FC = () => {
             <div className="hidden lg:flex items-center h-full">
               {navItems.map((item) => (
                 <div key={item.name} className="flex items-center h-full relative">
-                  <a
-                    href={item.href}
-                    onClick={() => setActiveLink(item.name)}
-                    className={`text-sm font-medium tracking-[0.02em] px-6 lg:px-8 py-4 h-full flex items-center justify-center border-l border-r border-[var(--ink-700)] relative overflow-hidden ${
-                      activeLink === item.name 
-                        ? 'text-black' 
-                        : 'text-[var(--paper)] hover:text-[var(--paper)]'
-                    }`}
-                    style={{ fontWeight: 500 }}
-                  >
-                    {/* Animated background fill */}
-                    <div 
-                      className={`absolute inset-0 bg-white transition-all duration-200 ease-out ${
+                  {item.href.startsWith('/') ? (
+                    <Link
+                      to={item.href}
+                      onClick={() => {
+                        console.log('Rulepacks link clicked!');
+                        setActiveLink(item.name);
+                      }}
+                      className={`text-sm font-medium tracking-[0.02em] px-6 lg:px-8 py-4 h-full flex items-center justify-center border-l border-r border-[var(--ink-700)] relative overflow-hidden ${
                         activeLink === item.name 
-                          ? 'opacity-100' 
-                          : 'opacity-0'
-                      } ${
-                        item.animation === 'bottom-up' 
-                          ? activeLink === item.name 
-                            ? 'translate-y-0' 
-                            : 'translate-y-full'
-                          : activeLink === item.name 
-                            ? 'translate-x-0' 
-                            : 'translate-x-full'
+                          ? 'text-black' 
+                          : 'text-[var(--paper)] hover:text-[var(--paper)]'
                       }`}
-                    />
-                    
-                    {/* Text content */}
-                    <div className="relative z-10 text-center">
-                      <div className="uppercase">{item.name}</div>
-                    </div>
-                  </a>
+                      style={{ fontWeight: 500 }}
+                    >
+                      {/* Animated background fill */}
+                      <div 
+                        className={`absolute inset-0 bg-white transition-all duration-200 ease-out ${
+                          activeLink === item.name 
+                            ? 'opacity-100' 
+                            : 'opacity-0'
+                        } ${
+                          item.animation === 'bottom-up' 
+                            ? activeLink === item.name 
+                              ? 'translate-y-0' 
+                              : 'translate-y-full'
+                            : activeLink === item.name 
+                              ? 'translate-x-0' 
+                              : 'translate-x-full'
+                        }`}
+                      />
+                      
+                      {/* Text content */}
+                      <div className="relative z-10 text-center">
+                        <div className="uppercase">{item.name}</div>
+                      </div>
+                    </Link>
+                  ) : (
+                    <a
+                      href={item.href}
+                      onClick={() => setActiveLink(item.name)}
+                      className={`text-sm font-medium tracking-[0.02em] px-6 lg:px-8 py-4 h-full flex items-center justify-center border-l border-r border-[var(--ink-700)] relative overflow-hidden ${
+                        activeLink === item.name 
+                          ? 'text-black' 
+                          : 'text-[var(--paper)] hover:text-[var(--paper)]'
+                      }`}
+                      style={{ fontWeight: 500 }}
+                    >
+                      {/* Animated background fill */}
+                      <div 
+                        className={`absolute inset-0 bg-white transition-all duration-200 ease-out ${
+                          activeLink === item.name 
+                            ? 'opacity-100' 
+                            : 'opacity-0'
+                        } ${
+                          item.animation === 'bottom-up' 
+                            ? activeLink === item.name 
+                              ? 'translate-y-0' 
+                              : 'translate-y-full'
+                            : activeLink === item.name 
+                              ? 'translate-x-0' 
+                              : 'translate-x-full'
+                        }`}
+                      />
+                      
+                      {/* Text content */}
+                      <div className="relative z-10 text-center">
+                        <div className="uppercase">{item.name}</div>
+                      </div>
+                    </a>
+                  )}
                 </div>
               ))}
               
-              {/* Command Palette Menu */}
-              <div className="ml-2 lg:ml-4">
+              {/* Command Palette Menu - Hidden for now */}
+              {/* <div className="ml-2 lg:ml-4">
                 <OpefMenu />
-              </div>
+              </div> */}
             </div>
 
             {/* Right Cluster - Status/CTA */}
@@ -169,28 +208,48 @@ const OpefNavbar: React.FC = () => {
           >
             <div className="px-4 md:px-8 py-6 space-y-3">
               {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => {
-                    setActiveLink(item.name);
-                    setIsOpen(false);
-                  }}
-                  className={`block text-sm md:text-base font-medium tracking-[0.02em] uppercase transition-colors duration-200 py-2 ${
-                    activeLink === item.name 
-                      ? 'text-[var(--olive-300)]' 
-                      : 'text-[var(--paper)] hover:text-[var(--paper)]'
-                  }`}
-                  style={{ fontWeight: 500 }}
-                >
-                  {item.name}
-                </a>
+                <div key={item.name}>
+                  {item.href.startsWith('/') ? (
+                    <Link
+                      to={item.href}
+                      onClick={() => {
+                        setActiveLink(item.name);
+                        setIsOpen(false);
+                      }}
+                      className={`block text-sm md:text-base font-medium tracking-[0.02em] uppercase transition-colors duration-200 py-2 ${
+                        activeLink === item.name 
+                          ? 'text-[var(--olive-300)]' 
+                          : 'text-[var(--paper)] hover:text-[var(--paper)]'
+                      }`}
+                      style={{ fontWeight: 500 }}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => {
+                        setActiveLink(item.name);
+                        setIsOpen(false);
+                      }}
+                      className={`block text-sm md:text-base font-medium tracking-[0.02em] uppercase transition-colors duration-200 py-2 ${
+                        activeLink === item.name 
+                          ? 'text-[var(--olive-300)]' 
+                          : 'text-[var(--paper)] hover:text-[var(--paper)]'
+                      }`}
+                      style={{ fontWeight: 500 }}
+                    >
+                      {item.name}
+                    </a>
+                  )}
+                </div>
               ))}
               
-              {/* Mobile Command Menu */}
-              <div className="pt-4 border-t border-[var(--ink-700)]">
+              {/* Mobile Command Menu - Hidden for now */}
+              {/* <div className="pt-4 border-t border-[var(--ink-700)]">
                 <OpefMenu />
-              </div>
+              </div> */}
             </div>
           </div>
         )}

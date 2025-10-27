@@ -4,6 +4,14 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/beta-signup",
+      "destination": "/api/beta-signup"
+    },
+    {
+      "source": "/api/get-signups",
+      "destination": "/api/get-signups"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

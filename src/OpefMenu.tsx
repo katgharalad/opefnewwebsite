@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const OLIVE = "#97B34D";
 
@@ -10,21 +11,21 @@ const GROUPS: { title: string; items: Item[] }[] = [
     items: [
       { label: "Overview", href: "#platform", kbd: "P" },
       { label: "How It Works", href: "#how-it-works", kbd: "H" },
-      { label: "Rulepacks", href: "#rulepacks" },
+      { label: "Rulepacks", href: "/rulepacks" },
     ],
   },
   {
     title: "Proof",
     items: [
-      { label: "Metrics", href: "#proof", kbd: "M" },
-      { label: "Security", href: "#security" },
-      { label: "Docs", href: "#docs" },
+      { label: "Metrics", href: "/metrics", kbd: "M" },
+      { label: "Security", href: "/security" },
+      { label: "Docs", href: "/docs" },
     ],
   },
   {
     title: "Company",
     items: [
-      { label: "Insights", href: "#insights" },
+      { label: "Insights", href: "/insights" },
       { label: "Team", href: "#team" },
       { label: "Contact", href: "#contact", kbd: "C" },
     ],
@@ -181,34 +182,65 @@ export default function OpefMenu() {
                     const isFirst = gi === 0 && ii === 0;
                     return (
                       <li key={item.label}>
-                        <a
-                          ref={isFirst ? firstItemRef : null}
-                          role="menuitem"
-                          href={item.href}
-                          className="group flex items-center justify-between gap-2 md:gap-3 px-1.5 md:px-2 py-1.5 md:py-2 rounded-[2px] text-[13px] md:text-[14px] leading-4 md:leading-5 text-white/90 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#97B34D]"
-                          style={{
-                            boxShadow:
-                              "inset 0 -1px 0 rgba(255,255,255,0.06)",
-                            animation: prefersReduced
-                              ? undefined
-                              : `o-item 140ms ${80 + (gi * 3 + ii) * 30
-                                }ms cubic-bezier(.2,.9,.2,1) both`,
-                          }}
-                          onClick={() => setOpen(false)}
-                        >
-                          <span className="relative">
-                            {item.label}
-                            <span className="block max-w-0 group-hover:max-w-full transition-[max-width] duration-200 ease-out border-b border-[#97B34D] mt-[2px]" />
-                          </span>
-                          <span className="flex items-center gap-1 md:gap-2">
-                            {item.kbd && (
-                              <kbd className="hidden sm:inline-block border border-white/20 px-1 md:px-1.5 py-[1px] text-[9px] md:text-[10px] font-mono text-white/60">
-                                {item.kbd}
-                              </kbd>
-                            )}
-                            <ArrowRight className="h-3 md:h-4 w-3 md:w-4 opacity-0 translate-x-[-4px] group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                          </span>
-                        </a>
+                        {item.href.startsWith('/') ? (
+                          <Link
+                            ref={isFirst ? firstItemRef : null}
+                            role="menuitem"
+                            to={item.href}
+                            className="group flex items-center justify-between gap-2 md:gap-3 px-1.5 md:px-2 py-1.5 md:py-2 rounded-[2px] text-[13px] md:text-[14px] leading-4 md:leading-5 text-white/90 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#97B34D]"
+                            style={{
+                              boxShadow:
+                                "inset 0 -1px 0 rgba(255,255,255,0.06)",
+                              animation: prefersReduced
+                                ? undefined
+                                : `o-item 140ms ${80 + (gi * 3 + ii) * 30
+                                  }ms cubic-bezier(.2,.9,.2,1) both`,
+                            }}
+                            onClick={() => setOpen(false)}
+                          >
+                            <span className="relative">
+                              {item.label}
+                              <span className="block max-w-0 group-hover:max-w-full transition-[max-width] duration-200 ease-out border-b border-[#97B34D] mt-[2px]" />
+                            </span>
+                            <span className="flex items-center gap-1 md:gap-2">
+                              {item.kbd && (
+                                <kbd className="hidden sm:inline-block border border-white/20 px-1 md:px-1.5 py-[1px] text-[9px] md:text-[10px] font-mono text-white/60">
+                                  {item.kbd}
+                                </kbd>
+                              )}
+                              <ArrowRight className="h-3 md:h-4 w-3 md:w-4 opacity-0 translate-x-[-4px] group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                            </span>
+                          </Link>
+                        ) : (
+                          <a
+                            ref={isFirst ? firstItemRef : null}
+                            role="menuitem"
+                            href={item.href}
+                            className="group flex items-center justify-between gap-2 md:gap-3 px-1.5 md:px-2 py-1.5 md:py-2 rounded-[2px] text-[13px] md:text-[14px] leading-4 md:leading-5 text-white/90 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#97B34D]"
+                            style={{
+                              boxShadow:
+                                "inset 0 -1px 0 rgba(255,255,255,0.06)",
+                              animation: prefersReduced
+                                ? undefined
+                                : `o-item 140ms ${80 + (gi * 3 + ii) * 30
+                                  }ms cubic-bezier(.2,.9,.2,1) both`,
+                            }}
+                            onClick={() => setOpen(false)}
+                          >
+                            <span className="relative">
+                              {item.label}
+                              <span className="block max-w-0 group-hover:max-w-full transition-[max-width] duration-200 ease-out border-b border-[#97B34D] mt-[2px]" />
+                            </span>
+                            <span className="flex items-center gap-1 md:gap-2">
+                              {item.kbd && (
+                                <kbd className="hidden sm:inline-block border border-white/20 px-1 md:px-1.5 py-[1px] text-[9px] md:text-[10px] font-mono text-white/60">
+                                  {item.kbd}
+                                </kbd>
+                              )}
+                              <ArrowRight className="h-3 md:h-4 w-3 md:w-4 opacity-0 translate-x-[-4px] group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                            </span>
+                          </a>
+                        )}
                       </li>
                     );
                   })}

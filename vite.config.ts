@@ -13,4 +13,24 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    historyApiFallback: true,
+    proxy: {
+      '/api/beta-signup': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/get-signups': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
 });
