@@ -1,8 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { db } from './firebase-admin';
 
-// In-memory storage (survives warm starts, resets on cold starts)
-// For production, replace this with a database
-let signups: Array<{ email: string; timestamp: string }> = [];
+interface BetaSignupData {
+  email: string;
+  timestamp: string;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST requests
@@ -27,32 +29,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Normalize email to lowercase
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check for duplicates
-    if (signups.some(s => s.email === normalizedEmail)) {
-      return res.status(409).json({ 
-        error: 'Email already registered',
-        count: signups.length 
+    // Check for duplicates using Firebase
+    if (db) {
+      // Use Firebase if available
+      const signupsRef = db.collection('beta_signups');
+      
+      // Check if email already exists
+      const existingSignup = await signupsRef.where('email', '==', normalizedEmail).get();
+      
+      if (!existingSignup.empty) {
+        // Get total count
+        const totalSignups = await signupsRef.get();
+        return res.status(409).json({ 
+          error: 'Email already registered',
+          count: totalSignups.size 
+        });
+      }
+
+      // Add new signup to Firebase
+      await signupsRef.add({
+        email: normalizedEmail,
+        timestamp: new Date().toISOString()
+      });
+
+      // Get updated count
+      const totalSignups = await signupsRef.get();
+
+      console.log(`✅ New signup: ${normalizedEmail} (Total: ${totalSignups.size})`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Email registered successfully',
+        count: totalSignups.size,
+        email: normalizedEmail
+      });
+    } else {
+      // Fallback to in-memory storage if Firebase not configured
+      // This is for local development without Firebase credentials
+      const inMemorySignups = (global as any).signups || [];
+      
+      if (inMemorySignups.some((s: BetaSignupData) => s.email === normalizedEmail)) {
+        return res.status(409).json({ 
+          error: 'Email already registered',
+          count: inMemorySignups.length 
+        });
+      }
+
+      inMemorySignups.push({
+        email: normalizedEmail,
+        timestamp: new Date().toISOString()
+      });
+      (global as any).signups = inMemorySignups;
+
+      console.log(`✅ New signup: ${normalizedEmail} (Total: ${inMemorySignups.length})`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Email registered successfully',
+        count: inMemorySignups.length,
+        email: normalizedEmail
       });
     }
-
-    // Add to in-memory storage
-    signups.push({
-      email: normalizedEmail,
-      timestamp: new Date().toISOString()
-    });
-
-    console.log(`✅ New signup: ${normalizedEmail} (Total: ${signups.length})`);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Email registered successfully',
-      count: signups.length,
-      email: normalizedEmail
-    });
 
   } catch (error) {
     console.error('Error handling signup:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
-

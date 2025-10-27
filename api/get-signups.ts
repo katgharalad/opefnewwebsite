@@ -1,13 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// In-memory storage (shared with beta-signup.ts via module-level variable)
-// This survives warm starts but resets on cold starts
-// For production, replace with a database (Supabase, MongoDB, Vercel KV, etc.)
-
-interface BetaSignupData {
-  email: string;
-  timestamp: string;
-}
+import { db } from './firebase-admin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow GET requests
@@ -16,16 +8,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Try to get signups from the shared module
-    // Since modules are cached, we need to use global or a shared approach
-    // For now, return empty array with explanation
-    // In production, this should fetch from a database
-    
-    return res.status(200).json({
-      count: 0,
-      signups: [],
-      note: 'In-memory storage is being used. For production, implement a database.'
-    });
+    if (db) {
+      // Use Firebase if available
+      const signupsRef = db.collection('beta_signups');
+      const snapshot = await signupsRef.orderBy('timestamp', 'desc').get();
+      
+      const signups = snapshot.docs.map(doc => ({
+        email: doc.data().email,
+        timestamp: doc.data().timestamp
+      }));
+
+      return res.status(200).json({
+        count: signups.length,
+        signups: signups
+      });
+    } else {
+      // Fallback to in-memory storage
+      const inMemorySignups = (global as any).signups || [];
+      
+      return res.status(200).json({
+        count: inMemorySignups.length,
+        signups: inMemorySignups
+      });
+    }
 
   } catch (error) {
     console.error('Error reading signups:', error);
