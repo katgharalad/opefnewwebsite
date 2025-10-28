@@ -7,6 +7,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    console.log('Get signups endpoint called');
+    
     // Fetch signups from Supabase, ordered by created_at descending
     const { data: signups, error } = await supabase
       .from('opef_waitlist')
@@ -14,8 +16,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Supabase fetch error:', error);
-      return res.status(500).json({ error: 'Failed to fetch signups' });
+      console.error('Supabase fetch error:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: 'Failed to fetch signups',
+        details: error.message
+      });
     }
     
     // Map created_at to timestamp for frontend compatibility
@@ -24,12 +29,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       timestamp: s.created_at
     })) || [];
     
+    console.log(`✅ Fetched ${formattedSignups.length} signups`);
+    
     return res.status(200).json({
       count: formattedSignups.length,
       signups: formattedSignups
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error reading signups:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error?.message || 'Unknown error occurred'
+    });
   }
 }

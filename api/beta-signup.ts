@@ -7,28 +7,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    console.log('Beta signup endpoint called');
+    console.log('Request body:', req.body);
+    
     const { email } = req.body;
 
     // Validate email
     if (!email || typeof email !== 'string') {
+      console.log('Email validation failed: missing or wrong type');
       return res.status(400).json({ error: 'Email is required' });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log('Email validation failed: invalid format');
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    console.log('Processing email:', normalizedEmail);
     
     // Check if email already exists in Supabase
-    const { data: existingSignup } = await supabase
+    console.log('Checking for existing signup...');
+    const { data: existingSignup, error: queryError } = await supabase
       .from('opef_waitlist')
       .select('email')
       .eq('email', normalizedEmail)
       .single();
 
+    if (queryError && queryError.code !== 'PGRST116') {
+      console.error('Query error:', queryError);
+      throw queryError;
+    }
+
     if (existingSignup) {
+      console.log('Email already exists');
       // Get total count
       const { count } = await supabase
         .from('opef_waitlist')
@@ -41,6 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Insert new signup into Supabase
+    console.log('Inserting new signup...');
     const { error: insertError } = await supabase
       .from('opef_waitlist')
       .insert({
@@ -49,9 +63,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
     if (insertError) {
-      console.error('Supabase insert error:', insertError);
+      console.error('Supabase insert error:', JSON.stringify(insertError, null, 2));
       throw insertError;
     }
+
+    console.log('Signup inserted successfully');
 
     // Get total count
     const { count } = await supabase
@@ -66,8 +82,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       count: count || 0,
       email: normalizedEmail
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error handling signup:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error occurred'
+    });
   }
 }

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "types": ["@vercel/node"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}
