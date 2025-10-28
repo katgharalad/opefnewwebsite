@@ -426,15 +426,26 @@ function HomePage() {
     e.preventDefault();
     if (!email) return;
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setSubmitError('Please enter a valid email address');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Open Google Form in new window
+    const formUrl = 'https://docs.google.com/forms/d/e/1E09Q1MtvyZspaC1ZT68c5R7J5Pie3slqXzDH89fWp7s/viewform';
+    window.open(formUrl, '_blank');
 
-    // Show success without storing anything
+    // Simulate brief delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Show success message
     setIsSubmitted(true);
-    setSignupCount(420); // Fake count
+    setSignupCount(null); // Don't show fake count
     setEmail('');
     
     // Show success state
