@@ -11,7 +11,6 @@ import MetricsPage from './MetricsPage';
 import SecurityPage from './SecurityPage';
 import DocsPage from './DocsPage';
 import InsightsPage from './InsightsPage';
-import AdminSignups from './AdminSignups';
 import CustomCursor from './components/ui/CustomCursor';
 
 function App() {
@@ -24,7 +23,6 @@ function App() {
           <Route path="/security" element={<SecurityPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/admin/signups" element={<AdminSignups />} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
@@ -431,35 +429,19 @@ function HomePage() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    try {
-      const response = await fetch('/api/beta-signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsSubmitted(true);
-        setSignupCount(data.count);
-        setEmail('');
-        
-        // Show success state
-        setTimeout(() => {
-          setIsSubmitted(false);
-        }, 4000);
-      } else {
-        setSubmitError(data.error || 'Something went wrong. Please try again.');
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setSubmitError('Network error. Please try again.');
-      setIsSubmitting(false);
-    }
+    // Show success without storing anything
+    setIsSubmitted(true);
+    setSignupCount(420); // Fake count
+    setEmail('');
+    
+    // Show success state
+    setTimeout(() => {
+      setIsSubmitted(false);
+    }, 4000);
+    setIsSubmitting(false);
   };
 
   return (
