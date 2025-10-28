@@ -422,37 +422,23 @@ function HomePage() {
     return () => clearInterval(interval);
   }, [isAutoRotating]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setSubmitError('Please enter a valid email address');
-      return;
-    }
-
     setIsSubmitting(true);
-    setSubmitError(null);
-
+    
     // Open Google Form in new window
-    const formUrl = 'https://docs.google.com/forms/d/e/1E09Q1MtvyZspaC1ZT68c5R7J5Pie3slqXzDH89fWp7s/viewform';
+    const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfxX2f8pMup8XbhuzuHHoWpafE5KN6nkY_CCq3qjrL81JhO4w/viewform?usp=dialog';
     window.open(formUrl, '_blank');
 
-    // Simulate brief delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Show success message
-    setIsSubmitted(true);
-    setSignupCount(null); // Don't show fake count
-    setEmail('');
-    
-    // Show success state
+    // Simulate brief delay then show success
     setTimeout(() => {
-      setIsSubmitted(false);
-    }, 4000);
-    setIsSubmitting(false);
+      setIsSubmitted(true);
+      setIsSubmitting(false);
+      
+      setTimeout(() => {
+        setIsSubmitted(false);
+      }, 4000);
+    }, 500);
   };
 
   return (
@@ -1972,26 +1958,8 @@ function HomePage() {
                     onSubmit={handleSubmit}
                     className="space-y-8"
                   >
-                <div className="flex flex-col md:flex-row gap-4">
-                      {/* Email input with refined styling */}
-                      <motion.input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setSubmitError(null);
-                    }}
-                    placeholder="your@email.com"
-                    required
-                    disabled={isSubmitting}
-                        className="flex-1 bg-transparent border-2 border-white px-6 py-4 text-lg font-mono focus:outline-none focus:border-[#97B34D] focus:ring-2 focus:ring-[#97B34D]/20 transition-all duration-300 placeholder:text-[#7E7E7E] placeholder:italic disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ 
-                          color: email ? '#97B34D' : '#F9FAF5'
-                        }}
-                        whileFocus={{ scale: 1.02 }}
-                      />
-                      
-                      {/* CTA button with inverted hover */}
+                    <div className="flex justify-center">
+                      {/* CTA button - centered */}
                       <motion.button
                     type="submit"
                     disabled={isSubmitting}
@@ -2000,7 +1968,7 @@ function HomePage() {
                         whileTap={{ scale: 0.98 }}
                       >
                         {isSubmitting ? (
-                          <span className="relative z-10">Submitting...</span>
+                          <span className="relative z-10">Opening...</span>
                         ) : (
                           <>
                             <span className="relative z-10">Request Early Access</span>
@@ -2008,27 +1976,8 @@ function HomePage() {
                           </>
                         )}
                       </motion.button>
-                </div>
+                    </div>
                     
-                    {submitError && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-sm font-mono text-red-400"
-                      >
-                        {submitError}
-                      </motion.p>
-                    )}
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={betaVisible ? { opacity: 1 } : { opacity: 0 }}
-                      transition={{ delay: 1.1, duration: 0.3 }}
-                      className="text-xs font-mono"
-                      style={{ color: '#7E7E7E' }}
-                    >
-                      No spam. Just early invites, research insights, and meaningful progress.
-                    </motion.p>
                   </motion.form>
                 ) : (
                   <motion.div
